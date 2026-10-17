@@ -1,5 +1,5 @@
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from './services/supabase.service';
@@ -33,6 +33,7 @@ interface Experience {
 })
 export class App implements OnInit {
   private supabase = inject(SupabaseService);
+  private cdr = inject(ChangeDetectorRef);
 
   rooms: Room[] = [];
   experiences: Experience[] = [];
@@ -224,54 +225,116 @@ export class App implements OnInit {
     this.notice = '';
   }
 
+
   async submitAuth(): Promise<void> {
+    if (this.busy) return;
+
     this.notice = '';
 
-    if (!this.authEmail.trim() || !this.authPassword) {
+    const email = this.authEmail.trim();
+    const password = this.authPassword;
+    const fullName = this.authName.trim();
+    const isRegistering = this.authMode === 'register';
+
+    if (!email || !password) {
       this.showNotice('Enter your email and password.', 'error');
       return;
     }
 
-    if (this.authMode === 'register' && !this.authName.trim()) {
+    if (isRegistering && !fullName) {
       this.showNotice('Enter your full name.', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      this.showNotice(
+        'Your password must be at least 6 characters long.',
+        'error'
+      );
       return;
     }
 
     this.busy = true;
 
-    const result = this.authMode === 'register'
-      ? await this.supabase.signUp(
-        this.authEmail.trim(),
-        this.authPassword,
-        this.authName.trim()
-      )
-      : await this.supabase.signIn(
-        this.authEmail.trim(),
-        this.authPassword
-      );
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    this.busy = false;
+    try {
+      const authRequest = isRegistering
+        ? this.supabase.signUp(email, password, fullName)
+        : this.supabase.signIn(email, password);
 
-    if (result.error) {
-      this.showNotice(result.error.message, 'error');
-      return;
-    }
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(
+            'The authentication request took too long. Check your connection and try again.'
+          ));
+        }, 20000);
+      });
 
-    if (this.authMode === 'register' && !result.data.session) {
+      const result = await Promise.race([authRequest, timeout]);
+
+      if (result.error) {
+        console.error('Authentication error:', result.error);
+
+        if (
+          result.error.status === 429 ||
+          /rate limit|too many requests/i.test(result.error.message)
+        ) {
+          this.showNotice(
+            'Too many requests. Please wait before trying again.',
+            'error'
+          );
+        } else {
+          this.showNotice(result.error.message, 'error');
+        }
+
+        return;
+      }
+
+      if (isRegistering && !result.data.session) {
+        this.showAuth = false;
+        this.authPassword = '';
+
+        this.showNotice(
+          'Account created. Please check your email if confirmation is required.',
+          'success'
+        );
+        return;
+      }
+
+      this.signedIn = !!result.data.user;
+      this.userEmail = result.data.user?.email ?? email;
+
+      // Close the modal immediately after successful authentication.
       this.showAuth = false;
-      this.showNotice('Account created. Check your email to confirm your account before logging in.', 'success');
-      return;
-    }
+      this.authPassword = '';
+      this.busy = false;
 
-    this.signedIn = true;
-    this.userEmail = result.data.user?.email ?? this.authEmail;
-    this.showAuth = false;
-    this.authPassword = '';
-    this.showNotice(
-      this.authMode === 'register' ? 'Welcome! Your account has been created.' : 'Welcome back!',
-      'success'
-    );
+      this.showNotice(
+        isRegistering
+          ? 'Welcome to Kahala! Your account has been created.'
+          : 'Welcome back!',
+        'success'
+      );
+    } catch (error: unknown) {
+      console.error('Authentication request failed:', error);
+
+      this.showNotice(
+        error instanceof Error
+          ? error.message
+          : 'Authentication failed. Please try again later.',
+        'error'
+      );
+    } finally {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+
+      this.busy = false;
+      this.cdr.detectChanges();
+    }
   }
+
 
   async signOut(): Promise<void> {
     const { error } = await this.supabase.signOut();
