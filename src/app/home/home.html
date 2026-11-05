@@ -1,0 +1,255 @@
+<header class="navbar">
+    <a class="brand" href="#home" (click)="scrollTo('home')">
+        <span class="brand-mark">K</span>
+        <span class="brand-text">KAHALA <small>RESORT & RETREAT</small></span>
+    </a>
+
+    <button class="menu-toggle" (click)="mobileMenuOpen = !mobileMenuOpen" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+    </button>
+
+    <nav [class.open]="mobileMenuOpen">
+        <a href="#experiences" (click)="scrollTo('experiences')">Experiences</a>
+        <a href="#accommodations" (click)="scrollTo('accommodations')">Accommodations</a>
+        <a href="#story" (click)="scrollTo('story')">Our Story</a>
+        <button class="nav-book" (click)="scrollTo('reservation')">Reserve Your Stay <span>↗</span></button>
+
+        <button *ngIf="!signedIn" class="nav-login" (click)="openAuth('login')">Sign in</button>
+        <button *ngIf="signedIn" class="nav-login" (click)="signOut()">Sign out</button>
+    </nav>
+</header>
+
+<main>
+    <section id="home" class="hero section">
+        <div class="hero-image"></div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <span class="eyebrow"><span class="eyebrow-line"></span> YOUR PRIVATE ISLAND ESCAPE</span>
+            <h1>Where the ocean<br />meets <em>serenity.</em></h1>
+            <p>Discover a world of quiet luxury, tropical beauty, and unforgettable moments by the sea.</p>
+            <div class="hero-actions">
+                <button class="button button-gold" (click)="scrollTo('accommodations')">Explore Our Stays
+                    <span>↗</span></button>
+                <button class="button button-ghost" (click)="scrollTo('experiences')">Discover Experiences</button>
+            </div>
+        </div>
+
+        <div class="hero-caption"><span>01</span> A MORE PERSONAL KIND OF PARADISE</div>
+        <div class="hero-scroll" (click)="scrollTo('story')"><span></span> SCROLL TO DISCOVER</div>
+    </section>
+
+    <section id="story" class="intro section">
+        <div class="intro-label"><span>01 / THE ART OF ESCAPE</span></div>
+        <div class="intro-copy">
+            <span class="eyebrow dark-eyebrow">WELCOME TO KAHALA</span>
+            <h2>A sanctuary shaped<br />by <em>nature.</em></h2>
+            <p>Beyond the everyday lies a place where time slows, warm ocean breezes drift through the palms, and every
+                detail
+                invites you to unwind.</p>
+            <button class="text-link" (click)="scrollTo('experiences')">Discover our philosophy <span>↗</span></button>
+        </div>
+        <div class="intro-visual">
+            <img src="https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1100&q=85"
+                alt="Tropical resort beside a turquoise sea" />
+            <div class="image-note"><span>THE ISLAND LIFE</span><strong>Beautifully unhurried.</strong></div>
+        </div>
+        <div class="intro-number">K.</div>
+    </section>
+
+    <section id="experiences" class="experiences section">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow"><span class="eyebrow-line"></span> MOMENTS TO REMEMBER</span>
+                <h2>Made for <em>wonder.</em></h2>
+            </div>
+            <p>From golden-hour adventures to slow, restorative rituals, find your own rhythm in paradise.</p>
+        </div>
+
+        <div *ngIf="loadingExperiences" class="loading">Discovering resort experiences...</div>
+
+        <div class="experience-grid" *ngIf="!loadingExperiences && experiences.length">
+            <article class="experience-card" *ngFor="let experience of experiences; let i = index">
+                <div class="experience-image">
+                    <img [src]="experience.image_url || 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1000&q=85'"
+                        [alt]="experience.title" />
+                    <span class="experience-index">0{{ i + 1 }}</span>
+                </div>
+                <div class="experience-info">
+                    <div>
+                        <h3>{{ experience.title }}</h3>
+                        <p>{{ experience.description }}</p>
+                    </div>
+                    <span class="experience-arrow">↗</span>
+                </div>
+                <div class="experience-meta"><span>{{ experience.duration || 'A unique experience' }}</span><span>FROM
+                        {{
+                        formatPrice(experience.price) }}</span></div>
+            </article>
+        </div>
+
+        <p *ngIf="!loadingExperiences && !experiences.length" class="empty-message">Experiences will appear here once
+            they
+            are added in Supabase.</p>
+    </section>
+
+    <section id="accommodations" class="accommodations section">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow dark-eyebrow">YOUR PRIVATE RETREAT</span>
+                <h2>Stay a little <em>longer.</em></h2>
+            </div>
+            <p>Thoughtfully designed spaces, understated elegance, and room to simply be.</p>
+        </div>
+
+        <p *ngIf="connectionMessage" class="error-message">{{ connectionMessage }}</p>
+        <div *ngIf="loadingRooms" class="loading dark-loading">Finding your perfect stay...</div>
+
+        <div class="room-grid" *ngIf="!loadingRooms && rooms.length">
+            <article class="room-card" *ngFor="let room of rooms">
+                <div class="room-image">
+                    <img [src]="room.image_url || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1200&q=85'"
+                        [alt]="room.name" />
+                    <span class="room-type">{{ room.room_type }}</span>
+                    <button class="room-open" (click)="chooseRoom(room)"
+                        [attr.aria-label]="'Reserve ' + room.name">↗</button>
+                </div>
+                <div class="room-content">
+                    <div class="room-title-row">
+                        <h3>{{ room.name }}</h3><span class="room-capacity">UP TO {{ room.max_guests }} GUESTS</span>
+                    </div>
+                    <p>{{ room.description }}</p>
+                    <div class="amenities"><span *ngFor="let amenity of room.amenities.slice(0, 3)">{{ amenity }}</span>
+                    </div>
+                    <div class="room-footer">
+                        <div class="room-price">{{ formatPrice(room.price_per_night) }} <small>/ NIGHT</small></div>
+                        <button class="text-link" (click)="chooseRoom(room)">Choose stay <span>↗</span></button>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <p *ngIf="!loadingRooms && !rooms.length && !connectionMessage" class="empty-message dark-empty">No
+            accommodations
+            have been added yet. Add rooms in your Supabase Table Editor.</p>
+    </section>
+
+    <section id="reservation" class="reservation section">
+        <div class="reservation-background"></div>
+        <div class="reservation-inner">
+            <div class="reservation-copy">
+                <span class="eyebrow"><span class="eyebrow-line"></span> YOUR ESCAPE BEGINS HERE</span>
+                <h2>Make room for<br /><em>something beautiful.</em></h2>
+                <p>Choose your dates and let your next chapter of island living begin.</p>
+                <div class="reservation-selected" *ngIf="selectedRoom">
+                    <span>YOUR SELECTED ACCOMMODATION</span>
+                    <strong>{{ selectedRoom.name }}</strong>
+                    <span>{{ formatPrice(selectedRoom.price_per_night) }} per night</span>
+                    <button class="text-link" (click)="selectedRoom = null">Change accommodation</button>
+                </div>
+            </div>
+
+            <form class="booking-form" (ngSubmit)="submitReservation()">
+                <h3>Plan your stay</h3>
+                <p class="form-subtitle">Tell us a little about your getaway.</p>
+
+                <label for="roomSelect">Accommodation</label>
+                <select id="roomSelect" name="room" [(ngModel)]="selectedRoom" required>
+                    <option [ngValue]="null" disabled>Select a stay</option>
+                    <option *ngFor="let room of rooms" [ngValue]="room">{{ room.name }} — {{
+                        formatPrice(room.price_per_night)
+                        }}/night</option>
+                </select>
+
+                <div class="form-row">
+                    <div><label for="checkIn">Check-in</label><input id="checkIn" name="checkIn" type="date"
+                            [(ngModel)]="checkIn" [min]="toDateInputForTemplate" required /></div>
+                    <div><label for="checkOut">Check-out</label><input id="checkOut" name="checkOut" type="date"
+                            [(ngModel)]="checkOut" [min]="checkIn" required /></div>
+                </div>
+
+                <label for="guests">Guests</label>
+                <select id="guests" name="guests" [(ngModel)]="guests">
+                    <option [ngValue]="1">1 guest</option>
+                    <option [ngValue]="2">2 guests</option>
+                    <option [ngValue]="3">3 guests</option>
+                    <option [ngValue]="4">4 guests</option>
+                    <option [ngValue]="5">5 guests</option>
+                    <option [ngValue]="6">6 guests</option>
+                </select>
+
+                <label for="requests">Special requests <span class="optional">(optional)</span></label>
+                <textarea id="requests" name="requests" rows="2" [(ngModel)]="specialRequests"
+                    placeholder="How can we make your stay special?"></textarea>
+
+                <div class="estimate" *ngIf="selectedRoom && nights > 0">
+                    <span>Estimated total · {{ nights }} night{{ nights === 1 ? '' : 's' }}</span>
+                    <strong>{{ formatPrice(estimatedTotal) }}</strong>
+                </div>
+
+                <button class="button button-gold submit-button" type="submit" [disabled]="busy || loadingRooms">
+                    {{ busy ? 'Please wait...' : 'Request a Reservation' }} <span>↗</span>
+                </button>
+                <p class="form-footnote">Your reservation request will be subject to availability and confirmation.</p>
+            </form>
+        </div>
+    </section>
+
+    <section class="closing section">
+        <span class="eyebrow"><span class="eyebrow-line"></span> A WORLD AWAY, YET CLOSE TO THE HEART</span>
+        <h2>Your paradise<br />is <em>waiting.</em></h2>
+        <button class="button button-gold" (click)="scrollTo('reservation')">Begin Your Escape <span>↗</span></button>
+    </section>
+</main>
+
+<footer class="footer">
+    <a class="brand footer-brand" href="#home" (click)="scrollTo('home')">
+        <span class="brand-mark">K</span>
+        <span class="brand-text">KAHALA <small>RESORT & RETREAT</small></span>
+    </a>
+    <p>A quieter kind of luxury.</p>
+    <span>© {{ 2026 }} KAHALA RESORT. DEMONSTRATION WEBSITE.</span>
+</footer>
+
+<div class="toast" *ngIf="notice" [class.toast-error]="noticeType === 'error'">
+    <span>{{ notice }}</span>
+    <button (click)="notice = ''" aria-label="Dismiss message">×</button>
+</div>
+
+<div class="modal-backdrop" *ngIf="showAuth" (click)="showAuth = false">
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle"
+        (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="showAuth = false" aria-label="Close dialog">×</button>
+        <span class="eyebrow dark-eyebrow">WELCOME TO KAHALA</span>
+        <h2 id="authTitle">{{ authMode === 'login' ? 'Welcome back.' : 'Join us in paradise.' }}</h2>
+        <p>{{ authMode === 'login' ? 'Sign in to continue to your getaway.' : 'Create an account to start planning your
+            stay.' }}</p>
+
+        <form (ngSubmit)="submitAuth()">
+            <label *ngIf="authMode === 'register'" for="authName">Full name</label>
+            <input *ngIf="authMode === 'register'" id="authName" name="authName" [(ngModel)]="authName"
+                placeholder="Your full name" autocomplete="name" />
+
+            <label for="authEmail">Email address</label>
+            <input id="authEmail" name="authEmail" type="email" [(ngModel)]="authEmail" placeholder="you@example.com"
+                autocomplete="email" required />
+
+            <label for="authPassword">Password</label>
+            <input id="authPassword" name="authPassword" type="password" [(ngModel)]="authPassword"
+                placeholder="At least 6 characters"
+                [attr.autocomplete]="authMode === 'login' ? 'current-password' : 'new-password'" minlength="6"
+                required />
+
+            <button class="button button-gold submit-button" type="submit" [disabled]="busy">
+                {{ busy ? 'Please wait...' : (authMode === 'login' ? 'Sign In' : 'Create Account') }}
+            </button>
+        </form>
+
+        <p class="auth-switch">
+            {{ authMode === 'login' ? 'New to Kahala?' : 'Already have an account?' }}
+            <button (click)="authMode = authMode === 'login' ? 'register' : 'login'">
+                {{ authMode === 'login' ? 'Create an account' : 'Sign in' }}
+            </button>
+        </p>
+    </section>
+</div>
