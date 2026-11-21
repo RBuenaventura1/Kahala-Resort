@@ -13,7 +13,7 @@
         <a href="#accommodations" (click)="scrollTo('accommodations')">Accommodations</a>
         <a href="#story" (click)="scrollTo('story')">Our Story</a>
         <a *ngIf="signedIn" routerLink="/my-reservations"> My reservations</a>
-        <button class="nav-book" (click)="scrollTo('accommodations')">Reserve Your Stay <span>↗</span></button>
+        <button class="nav-book" (click)="scrollTo('accommodations')">Reserve Your Stay</button>
 
         <button *ngIf="!signedIn" class="nav-login" (click)="openAuth('login')">Sign in</button>
         <button *ngIf="signedIn" class="nav-login" (click)="signOut()">Sign out</button>
@@ -26,12 +26,11 @@
         <div class="hero-overlay"></div>
 
         <div class="hero-content">
-            <span class="eyebrow"><span class="eyebrow-line"></span> YOUR PRIVATE ISLAND ESCAPE</span>
+            <span class="eyebrow">YOUR PRIVATE ISLAND ESCAPE</span>
             <h1>Where the ocean<br />meets <em>serenity.</em></h1>
             <p>Discover a world of quiet luxury, tropical beauty, and unforgettable moments by the sea.</p>
             <div class="hero-actions">
-                <button class="button button-gold" (click)="scrollTo('accommodations')">Explore Our Stays
-                    <span>↗</span></button>
+                <button class="button button-gold" (click)="scrollTo('accommodations')">Explore Our Stays</button>
                 <button class="button button-ghost" (click)="scrollTo('experiences')">Discover Experiences</button>
             </div>
         </div>
@@ -48,7 +47,7 @@
             <p>Beyond the everyday lies a place where time slows, warm ocean breezes drift through the palms, and every
                 detail
                 invites you to unwind.</p>
-            <button class="text-link" (click)="scrollTo('experiences')">Discover our philosophy <span>↗</span></button>
+            <button class="text-link" (click)="scrollTo('experiences')">Discover our philosophy</button>
         </div>
         <div class="intro-visual">
             <img src="https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=1100&q=85"
@@ -61,7 +60,7 @@
     <section id="experiences" class="experiences section">
         <div class="section-heading">
             <div>
-                <span class="eyebrow"><span class="eyebrow-line"></span> MOMENTS TO REMEMBER</span>
+                <span class="eyebrow">MOMENTS TO REMEMBER</span>
                 <h2>Made for <em>wonder.</em></h2>
             </div>
             <p>From golden-hour adventures to slow, restorative rituals, find your own rhythm in paradise.</p>
@@ -124,7 +123,7 @@
                     </div>
                     <div class="room-footer">
                         <div class="room-price">{{ formatPrice(room.price_per_night) }} <small>/ NIGHT</small></div>
-                        <button class="text-link" (click)="chooseRoom(room)">Choose stay <span>↗</span></button>
+                        <button class="text-link" (click)="chooseRoom(room)">Choose stay</button>
                     </div>
                 </div>
             </article>
@@ -136,10 +135,9 @@
     </section>
 
     <section class="closing section">
-        <span class="eyebrow"><span class="eyebrow-line"></span> A WORLD AWAY, YET CLOSE TO THE HEART</span>
+        <span class="eyebrow"> A WORLD AWAY, YET CLOSE TO THE HEART</span>
         <h2>Your paradise<br />is <em>waiting.</em></h2>
-        <button class="button button-gold" (click)="scrollTo('accommodations')">Begin Your Escape
-            <span>↗</span></button>
+        <button class="button button-gold" (click)="scrollTo('accommodations')">Begin Your Escape</button>
     </section>
 </main>
 
@@ -148,7 +146,6 @@
         <span class="brand-mark">K</span>
         <span class="brand-text">KAHALA <small>RESORT & RETREAT</small></span>
     </a>
-    <p>A quieter kind of luxury.</p>
     <span>© {{ 2026 }} KAHALA RESORT. DEMONSTRATION WEBSITE.</span>
 </footer>
 
