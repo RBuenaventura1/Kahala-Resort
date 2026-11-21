@@ -1,12 +1,30 @@
 import { Routes } from '@angular/router';
-import { Home } from './home/home';
 
 export const routes: Routes = [
     {
         path: '',
-        component: Home
+        pathMatch: 'full',
+        title: 'Kahala Resort',
+        loadComponent: () => import('./home/home').then(m => m.Home)
     },
-
+    {
+        path: 'reserve/:roomId',
+        title: 'Reserve your stay | Kahala',
+        loadComponent: () =>
+            import('./booking/reserve-page').then(m => m.ReservePage)
+    },
+    {
+        path: 'my-reservations/:reservationId',
+        title: 'Reservation details | Kahala',
+        loadComponent: () =>
+            import('./booking/reservations-page').then(m => m.ReservationsPage)
+    },
+    {
+        path: 'my-reservations',
+        title: 'My reservations | Kahala',
+        loadComponent: () =>
+            import('./booking/reservations-page').then(m => m.ReservationsPage)
+    },
     {
         path: '**',
         redirectTo: ''

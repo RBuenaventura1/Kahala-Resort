@@ -12,8 +12,8 @@
         <a href="#experiences" (click)="scrollTo('experiences')">Experiences</a>
         <a href="#accommodations" (click)="scrollTo('accommodations')">Accommodations</a>
         <a href="#story" (click)="scrollTo('story')">Our Story</a>
-        <a *ngIf="signedIn" href="#my-reservations" (click)="scrollTo('my-reservations')"> My reservations</a>
-        <button class="nav-book" (click)="scrollTo('reservation')">Reserve Your Stay <span>↗</span></button>
+        <a *ngIf="signedIn" routerLink="/my-reservations"> My reservations</a>
+        <button class="nav-book" (click)="scrollTo('accommodations')">Reserve Your Stay <span>↗</span></button>
 
         <button *ngIf="!signedIn" class="nav-login" (click)="openAuth('login')">Sign in</button>
         <button *ngIf="signedIn" class="nav-login" (click)="signOut()">Sign out</button>
@@ -135,177 +135,11 @@
             have been added yet. Add rooms in your Supabase Table Editor.</p>
     </section>
 
-    <section id="reservation" class="reservation section">
-        <div class="reservation-background"></div>
-        <div class="reservation-inner">
-            <div class="reservation-copy">
-                <span class="eyebrow"><span class="eyebrow-line"></span> YOUR ESCAPE BEGINS HERE</span>
-                <h2>Make room for<br /><em>something beautiful.</em></h2>
-                <p>Choose your dates and let your next chapter of island living begin.</p>
-                <div class="reservation-selected" *ngIf="selectedRoom">
-                    <span>YOUR SELECTED ACCOMMODATION</span>
-                    <strong>{{ selectedRoom.name }}</strong>
-                    <span>{{ formatPrice(selectedRoom.price_per_night) }} per night</span>
-                    <button class="text-link" (click)="selectedRoom = null">Change accommodation</button>
-                </div>
-            </div>
-
-            <form class="booking-form" (ngSubmit)="submitReservation()">
-                <h3>Plan your stay</h3>
-                <p class="form-subtitle">Tell us a little about your getaway.</p>
-
-                <label for="roomSelect">Accommodation</label>
-                <select id="roomSelect" name="room" [(ngModel)]="selectedRoom" required>
-                    <option [ngValue]="null" disabled>Select a stay</option>
-                    <option *ngFor="let room of rooms" [ngValue]="room">{{ room.name }} — {{
-                        formatPrice(room.price_per_night)
-                        }}/night</option>
-                </select>
-
-                <div class="form-row">
-                    <div><label for="checkIn">Check-in</label><input id="checkIn" name="checkIn" type="date"
-                            [(ngModel)]="checkIn" [min]="toDateInputForTemplate" required /></div>
-                    <div><label for="checkOut">Check-out</label><input id="checkOut" name="checkOut" type="date"
-                            [(ngModel)]="checkOut" [min]="checkIn" required /></div>
-                </div>
-
-                <label for="guests">Guests</label>
-                <select id="guests" name="guests" [(ngModel)]="guests">
-                    <option [ngValue]="1">1 guest</option>
-                    <option [ngValue]="2">2 guests</option>
-                    <option [ngValue]="3">3 guests</option>
-                    <option [ngValue]="4">4 guests</option>
-                    <option [ngValue]="5">5 guests</option>
-                    <option [ngValue]="6">6 guests</option>
-                </select>
-
-                <label for="requests">Special requests <span class="optional">(optional)</span></label>
-                <textarea id="requests" name="requests" rows="2" [(ngModel)]="specialRequests" maxlength="1000"
-                    placeholder="How can we make your stay special?"></textarea>
-
-                <div class="estimate" *ngIf="selectedRoom && nights > 0">
-                    <span>Estimated total · {{ nights }} night{{ nights === 1 ? '' : 's' }}</span>
-                    <strong>{{ formatPrice(estimatedTotal) }}</strong>
-                </div>
-
-                <button class="button button-gold submit-button" type="submit" [disabled]="busy || loadingRooms">
-                    {{ busy ? 'Please wait...' : 'Request a Reservation' }} <span>↗</span>
-                </button>
-                <p class="form-footnote">Your reservation request will be subject to availability and confirmation.</p>
-            </form>
-        </div>
-    </section>
-
-    <section id="my-reservations" class="my-reservations section" *ngIf="signedIn"
-        aria-labelledby="myReservationsTitle">
-        <div class="section-heading">
-            <div>
-                <span class="eyebrow dark-eyebrow">YOUR KAHALA ACCOUNT</span>
-                <h2 id="myReservationsTitle">Your <em>reservations.</em></h2>
-            </div>
-            <p>Review your reservation requests and their current status.</p>
-        </div>
-
-        <p *ngIf="loadingReservations" class="loading dark-loading" role="status">
-            Loading your reservations...
-        </p>
-
-        <p *ngIf="reservationError" class="error-message" role="alert">
-            {{ reservationError }}
-        </p>
-
-        <p *ngIf="
-                !loadingReservations &&
-                !reservationError &&
-                reservations.length === 0
-            " class="empty-message dark-empty">
-            You don’t have any reservation requests yet.
-        </p>
-
-        <div class="my-reservation-grid" *ngIf="
-                !loadingReservations &&
-                !reservationError &&
-                reservations.length > 0
-            ">
-            <article class="my-reservation-card" *ngFor="let reservation of reservations">
-                <div class="my-reservation-top">
-                    <div>
-                        <span class="reservation-label">ACCOMMODATION</span>
-                        <h3>{{ reservationRoomName(reservation) }}</h3>
-                        <span class="reservation-room-type">
-                            {{ reservationRoomType(reservation) }}
-                        </span>
-                    </div>
-
-                    <span class="reservation-status" [ngClass]="'status-' + reservation.status">
-                        {{ formatReservationStatus(reservation.status) }}
-                    </span>
-                </div>
-
-                <div class="my-reservation-details">
-                    <div>
-                        <span class="reservation-label">CHECK-IN</span>
-                        <strong>
-                            {{ formatStayDate(reservation.check_in) }}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span class="reservation-label">CHECK-OUT</span>
-                        <strong>
-                            {{ formatStayDate(reservation.check_out) }}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span class="reservation-label">GUESTS</span>
-                        <strong>{{ reservation.guests }}</strong>
-                    </div>
-
-                    <div>
-                        <span class="reservation-label">TOTAL</span>
-                        <strong>
-                            {{ formatPrice(reservation.total_price) }}
-                        </strong>
-                    </div>
-                </div>
-
-                <p class="reservation-request" *ngIf="reservation.special_requests">
-                    <span class="reservation-label">YOUR REQUEST</span>
-                    {{ reservation.special_requests }}
-                </p>
-
-                <p class="reservation-pending-note" *ngIf="reservation.status === 'pending'">
-                    Your request is awaiting confirmation.
-                </p>
-            </article>
-        </div>
-
-        <nav class="reservation-pagination" aria-label="Reservation pages"
-            *ngIf="reservationTotal > reservationPageSize">
-            <button type="button" class="button button-gold" [disabled]="loadingReservations || reservationPage === 1"
-                (click)="changeReservationPage(reservationPage - 1)">
-                Previous
-            </button>
-
-            <span role="status" aria-live="polite">
-                Page {{ reservationPage }} of {{ reservationTotalPages }}
-                · {{ reservationTotal }} reservations
-            </span>
-
-            <button type="button" class="button button-gold" [disabled]="
-                    loadingReservations ||
-                    reservationPage >= reservationTotalPages
-                " (click)="changeReservationPage(reservationPage + 1)">
-                Next
-            </button>
-        </nav>
-    </section>
-
     <section class="closing section">
         <span class="eyebrow"><span class="eyebrow-line"></span> A WORLD AWAY, YET CLOSE TO THE HEART</span>
         <h2>Your paradise<br />is <em>waiting.</em></h2>
-        <button class="button button-gold" (click)="scrollTo('reservation')">Begin Your Escape <span>↗</span></button>
+        <button class="button button-gold" (click)="scrollTo('accommodations')">Begin Your Escape
+            <span>↗</span></button>
     </section>
 </main>
 
