@@ -64,7 +64,9 @@ export class SupabaseService {
   async getRooms() {
     return this.client
       .from('rooms')
-      .select('*')
+      .select(
+        'id, name, description, room_type, max_guests, price_per_night, image_url, amenities'
+      )
       .eq('is_available', true)
       .order('price_per_night', { ascending: true });
   }
@@ -72,16 +74,28 @@ export class SupabaseService {
   async getExperiences() {
     return this.client
       .from('experiences')
-      .select('*')
+      .select('id, title, description, price, image_url, duration')
       .eq('is_active', true)
       .order('title');
   }
 
-  async getMyReservations() {
+  async getMyReservations(
+    userId: string,
+    page = 1,
+    pageSize = 6
+  ) {
+    const from = (page - 1) * pageSize;
+
     return this.client
       .from('orders')
-      .select('*, rooms(name, image_url, room_type)')
-      .order('created_at', { ascending: false });
+      .select(
+        'id, room_id, check_in, check_out, guests, total_price, status, special_requests, created_at, rooms(name, room_type, image_url)',
+        { count: 'exact' }
+      )
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, from + pageSize - 1);
   }
 
   async createReservation(details: {
@@ -100,20 +114,4 @@ export class SupabaseService {
     });
   }
 
-  async getAllReservations() {
-    return this.client
-      .from('orders')
-      .select('*, profiles(full_name), rooms(name)')
-      .order('created_at', { ascending: false });
-  }
-
-  async updateReservationStatus(
-    reservationId: string,
-    status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled'
-  ) {
-    return this.client
-      .from('orders')
-      .update({ status })
-      .eq('id', reservationId);
-  }
 }

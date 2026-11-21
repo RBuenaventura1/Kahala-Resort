@@ -12,6 +12,7 @@
         <a href="#experiences" (click)="scrollTo('experiences')">Experiences</a>
         <a href="#accommodations" (click)="scrollTo('accommodations')">Accommodations</a>
         <a href="#story" (click)="scrollTo('story')">Our Story</a>
+        <a *ngIf="signedIn" href="#my-reservations" (click)="scrollTo('my-reservations')"> My reservations</a>
         <button class="nav-book" (click)="scrollTo('reservation')">Reserve Your Stay <span>↗</span></button>
 
         <button *ngIf="!signedIn" class="nav-login" (click)="openAuth('login')">Sign in</button>
@@ -179,7 +180,7 @@
                 </select>
 
                 <label for="requests">Special requests <span class="optional">(optional)</span></label>
-                <textarea id="requests" name="requests" rows="2" [(ngModel)]="specialRequests"
+                <textarea id="requests" name="requests" rows="2" [(ngModel)]="specialRequests" maxlength="1000"
                     placeholder="How can we make your stay special?"></textarea>
 
                 <div class="estimate" *ngIf="selectedRoom && nights > 0">
@@ -193,6 +194,112 @@
                 <p class="form-footnote">Your reservation request will be subject to availability and confirmation.</p>
             </form>
         </div>
+    </section>
+
+    <section id="my-reservations" class="my-reservations section" *ngIf="signedIn"
+        aria-labelledby="myReservationsTitle">
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow dark-eyebrow">YOUR KAHALA ACCOUNT</span>
+                <h2 id="myReservationsTitle">Your <em>reservations.</em></h2>
+            </div>
+            <p>Review your reservation requests and their current status.</p>
+        </div>
+
+        <p *ngIf="loadingReservations" class="loading dark-loading" role="status">
+            Loading your reservations...
+        </p>
+
+        <p *ngIf="reservationError" class="error-message" role="alert">
+            {{ reservationError }}
+        </p>
+
+        <p *ngIf="
+                !loadingReservations &&
+                !reservationError &&
+                reservations.length === 0
+            " class="empty-message dark-empty">
+            You don’t have any reservation requests yet.
+        </p>
+
+        <div class="my-reservation-grid" *ngIf="
+                !loadingReservations &&
+                !reservationError &&
+                reservations.length > 0
+            ">
+            <article class="my-reservation-card" *ngFor="let reservation of reservations">
+                <div class="my-reservation-top">
+                    <div>
+                        <span class="reservation-label">ACCOMMODATION</span>
+                        <h3>{{ reservationRoomName(reservation) }}</h3>
+                        <span class="reservation-room-type">
+                            {{ reservationRoomType(reservation) }}
+                        </span>
+                    </div>
+
+                    <span class="reservation-status" [ngClass]="'status-' + reservation.status">
+                        {{ formatReservationStatus(reservation.status) }}
+                    </span>
+                </div>
+
+                <div class="my-reservation-details">
+                    <div>
+                        <span class="reservation-label">CHECK-IN</span>
+                        <strong>
+                            {{ formatStayDate(reservation.check_in) }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span class="reservation-label">CHECK-OUT</span>
+                        <strong>
+                            {{ formatStayDate(reservation.check_out) }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span class="reservation-label">GUESTS</span>
+                        <strong>{{ reservation.guests }}</strong>
+                    </div>
+
+                    <div>
+                        <span class="reservation-label">TOTAL</span>
+                        <strong>
+                            {{ formatPrice(reservation.total_price) }}
+                        </strong>
+                    </div>
+                </div>
+
+                <p class="reservation-request" *ngIf="reservation.special_requests">
+                    <span class="reservation-label">YOUR REQUEST</span>
+                    {{ reservation.special_requests }}
+                </p>
+
+                <p class="reservation-pending-note" *ngIf="reservation.status === 'pending'">
+                    Your request is awaiting confirmation.
+                </p>
+            </article>
+        </div>
+
+        <nav class="reservation-pagination" aria-label="Reservation pages"
+            *ngIf="reservationTotal > reservationPageSize">
+            <button type="button" class="button button-gold" [disabled]="loadingReservations || reservationPage === 1"
+                (click)="changeReservationPage(reservationPage - 1)">
+                Previous
+            </button>
+
+            <span role="status" aria-live="polite">
+                Page {{ reservationPage }} of {{ reservationTotalPages }}
+                · {{ reservationTotal }} reservations
+            </span>
+
+            <button type="button" class="button button-gold" [disabled]="
+                    loadingReservations ||
+                    reservationPage >= reservationTotalPages
+                " (click)="changeReservationPage(reservationPage + 1)">
+                Next
+            </button>
+        </nav>
     </section>
 
     <section class="closing section">

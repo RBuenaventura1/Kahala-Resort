@@ -256,6 +256,125 @@ h2 em {
     background: rgba(255, 255, 255, .16);
 }
 
+.my-reservations {
+    padding: 95px 9%;
+    background: var(--cream);
+    color: var(--ink);
+}
+
+.my-reservation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,
+            minmax(min(100%, 340px), 1fr));
+    gap: 20px;
+}
+
+.my-reservation-card {
+    min-width: 0;
+    padding: 24px;
+    background: white;
+    border: 1px solid #e8e5db;
+}
+
+.my-reservation-top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eae9e2;
+}
+
+.my-reservation-top h3 {
+    margin: 7px 0 4px;
+    font-family: 'Playfair Display', serif;
+    font-size: 23px;
+    font-weight: 400;
+}
+
+.reservation-label {
+    display: block;
+    color: #64736a;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+.reservation-room-type {
+    color: #64736a;
+    font-size: 12px;
+}
+
+.reservation-status {
+    padding: 7px 9px;
+    background: #f2ead3;
+    color: #70571a;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.status-confirmed,
+.status-checked_in,
+.status-checked_out {
+    background: #e3eee6;
+    color: #356347;
+}
+
+.status-cancelled {
+    background: #f4e4e1;
+    color: #8a3a30;
+}
+
+.my-reservation-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px 0;
+}
+
+.my-reservation-details strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.reservation-request {
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid #eae9e2;
+    color: #64736a;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.reservation-request .reservation-label {
+    margin-bottom: 6px;
+}
+
+.reservation-pending-note {
+    margin: 16px 0 0;
+    color: #70571a;
+    font-size: 12px;
+}
+
+.reservation-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.reservation-pagination>span {
+    color: var(--ink);
+    font-size: 12px;
+    text-align: center;
+}
+
 .hero-caption {
     position: absolute;
     left: 6.5%;

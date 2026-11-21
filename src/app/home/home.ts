@@ -24,6 +24,24 @@ interface Experience {
     duration: string | null;
 }
 
+type ReservationRoomSummary = {
+    name: string;
+    room_type: string;
+    image_url: string | null;
+};
+
+interface Reservation {
+    id: string;
+    room_id: string;
+    check_in: string;
+    check_out: string;
+    guests: number;
+    total_price: number;
+    status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
+    special_requests: string | null;
+    rooms: ReservationRoomSummary | ReservationRoomSummary[] | null;
+}
+
 @Component({
     selector: 'app-home',
     standalone: true,
@@ -36,8 +54,29 @@ export class Home implements OnInit {
     private supabase = inject(SupabaseService);
     private cdr = inject(ChangeDetectorRef);
 
+    private getReservationRoom(
+        reservation: Reservation
+    ): ReservationRoomSummary | null {
+        return Array.isArray(reservation.rooms)
+            ? reservation.rooms[0] ?? null
+            : reservation.rooms;
+    }
+
+    reservationRoomName(reservation: Reservation): string {
+        return this.getReservationRoom(reservation)?.name
+            ?? 'Kahala accommodation';
+    }
+
+    reservationRoomType(reservation: Reservation): string {
+        return this.getReservationRoom(reservation)?.room_type ?? 'Room';
+    }
+
     rooms: Room[] = [];
     experiences: Experience[] = [];
+
+    reservations: Reservation[] = [];
+    loadingReservations = false;
+    reservationError = '';
 
     loadingRooms = true;
     loadingExperiences = true;
@@ -63,6 +102,20 @@ export class Home implements OnInit {
     authEmail = '';
     authPassword = '';
 
+    readonly reservationPageSize = 6;
+    reservationPage = 1;
+    reservationTotal = 0;
+
+    private reservationUserId: string | null = null;
+    private reservationRequestId = 0;
+
+    get reservationTotalPages(): number {
+        return Math.max(
+            1,
+            Math.ceil(this.reservationTotal / this.reservationPageSize)
+        );
+    }
+
     async ngOnInit(): Promise<void> {
         await Promise.all([
             this.loadRooms(),
@@ -78,8 +131,19 @@ export class Home implements OnInit {
         this.checkOut = this.toDateInput(tomorrow);
 
         this.supabase.client.auth.onAuthStateChange((_event, session) => {
-            this.signedIn = !!session?.user;
-            this.userEmail = session?.user?.email ?? '';
+            const user = session?.user;
+
+            this.signedIn = !!user;
+            this.userEmail = user?.email ?? '';
+
+            if (user) {
+                const userId = user.id;
+                window.setTimeout(() => void this.loadMyReservations(userId), 0);
+            } else {
+                this.reservations = [];
+                this.loadingReservations = false;
+                this.clearReservations();
+            }
         });
     }
 
@@ -124,6 +188,12 @@ export class Home implements OnInit {
         const user = await this.supabase.getCurrentUser();
         this.signedIn = !!user;
         this.userEmail = user?.email ?? '';
+
+        if (user) {
+            await this.loadMyReservations(user.id);
+        } else {
+            this.reservations = [];
+        }
     }
 
     scrollTo(id: string): void {
@@ -174,17 +244,37 @@ export class Home implements OnInit {
         }
 
         if (!this.checkIn || !this.checkOut || this.nights < 1) {
-            this.showNotice('Please choose valid check-in and check-out dates.', 'error');
+            this.showNotice(
+                'Please choose valid check-in and check-out dates.',
+                'error'
+            );
             return;
         }
 
-        if (new Date(`${this.checkIn}T00:00:00`) < new Date(`${this.toDateInput(new Date())}T00:00:00`)) {
+        if (
+            new Date(`${this.checkIn}T00:00:00`) <
+            new Date(`${this.toDateInput(new Date())}T00:00:00`)
+        ) {
             this.showNotice('Check-in cannot be in the past.', 'error');
             return;
         }
 
-        if (this.guests < 1 || this.guests > this.selectedRoom.max_guests) {
-            this.showNotice(`This room allows up to ${this.selectedRoom.max_guests} guests.`, 'error');
+        if (
+            this.guests < 1 ||
+            this.guests > this.selectedRoom.max_guests
+        ) {
+            this.showNotice(
+                `This room allows up to ${this.selectedRoom.max_guests} guests.`,
+                'error'
+            );
+            return;
+        }
+
+        if (this.specialRequests.length > 1000) {
+            this.showNotice(
+                'Special requests must be 1,000 characters or fewer.',
+                'error'
+            );
             return;
         }
 
@@ -193,31 +283,52 @@ export class Home implements OnInit {
         if (!user) {
             this.showAuth = true;
             this.authMode = 'login';
-            this.showNotice('Please log in before making a reservation.', 'error');
+            this.showNotice(
+                'Please log in before making a reservation.',
+                'error'
+            );
             return;
         }
 
         this.busy = true;
 
-        const { error } = await this.supabase.createReservation({
-            roomId: this.selectedRoom.id,
-            checkIn: this.checkIn,
-            checkOut: this.checkOut,
-            guests: this.guests,
-            specialRequests: this.specialRequests
-        });
+        try {
+            const { error } = await this.supabase.createReservation({
+                roomId: this.selectedRoom.id,
+                checkIn: this.checkIn,
+                checkOut: this.checkOut,
+                guests: this.guests,
+                specialRequests: this.specialRequests.trim()
+            });
 
-        this.busy = false;
+            if (error) {
+                console.error('Reservation request failed:', error);
+                this.showNotice(
+                    'We could not submit your reservation. Please check your details and try again.',
+                    'error'
+                );
+                return;
+            }
 
-        if (error) {
-            this.showNotice(error.message, 'error');
-            return;
+            this.showNotice(
+                'Reservation submitted successfully. It is subject to availability and confirmation.',
+                'success'
+            );
+            this.specialRequests = '';
+            this.selectedRoom = null;
+            await Promise.all([
+                this.loadRooms(),
+                this.loadMyReservations(user.id)
+            ]);
+        } catch (error: unknown) {
+            console.error('Reservation request failed:', error);
+            this.showNotice(
+                'We could not submit your reservation. Please try again later.',
+                'error'
+            );
+        } finally {
+            this.busy = false;
         }
-
-        this.showNotice('Reservation submitted successfully! You can view it in your customer dashboard once that page is implemented.', 'success');
-        this.specialRequests = '';
-        this.selectedRoom = null;
-        await this.loadRooms();
     }
 
     openAuth(mode: 'login' | 'register'): void {
@@ -357,5 +468,96 @@ export class Home implements OnInit {
 
     get toDateInputForTemplate(): string {
         return this.toDateInput(new Date());
+    }
+
+    async loadMyReservations(
+        userId: string,
+        page = 1
+    ): Promise<void> {
+        const requestId = ++this.reservationRequestId;
+
+        this.reservationUserId = userId;
+        this.reservationPage = page;
+        this.loadingReservations = true;
+        this.reservationError = '';
+        this.reservations = [];
+
+        try {
+            const { data, error, count } =
+                await this.supabase.getMyReservations(
+                    userId,
+                    page,
+                    this.reservationPageSize
+                );
+
+            // Ignore responses from an older request.
+            if (requestId !== this.reservationRequestId) return;
+
+            if (error) throw error;
+
+            this.reservationTotal = count ?? 0;
+
+            // Handle a page becoming empty after records are removed.
+            if (page > this.reservationTotalPages) {
+                await this.loadMyReservations(
+                    userId,
+                    this.reservationTotalPages
+                );
+                return;
+            }
+
+            this.reservations = (data ?? []) as Reservation[];
+        } catch (error: unknown) {
+            if (requestId !== this.reservationRequestId) return;
+
+            console.error('Reservation loading failed:', error);
+            this.reservationError =
+                'Unable to load your reservations. Please try again.';
+        } finally {
+            if (requestId === this.reservationRequestId) {
+                this.loadingReservations = false;
+                this.cdr.detectChanges();
+            }
+        }
+    }
+
+    formatStayDate(dateValue: string): string {
+        const [year, month, day] = dateValue.split('-').map(Number);
+
+        return new Intl.DateTimeFormat('en-PH', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC'
+        }).format(new Date(Date.UTC(year, month - 1, day)));
+    }
+
+    formatReservationStatus(status: Reservation['status']): string {
+        return status.replace(/_/g, ' ');
+    }
+
+    async changeReservationPage(page: number): Promise<void> {
+        if (
+            this.loadingReservations ||
+            !this.reservationUserId ||
+            page < 1 ||
+            page > this.reservationTotalPages
+        ) {
+            return;
+        }
+
+        await this.loadMyReservations(this.reservationUserId, page);
+    }
+
+    private clearReservations(): void {
+        // Invalidate requests that might finish after sign-out.
+        ++this.reservationRequestId;
+
+        this.reservationUserId = null;
+        this.reservations = [];
+        this.reservationTotal = 0;
+        this.reservationPage = 1;
+        this.reservationError = '';
+        this.loadingReservations = false;
     }
 }
