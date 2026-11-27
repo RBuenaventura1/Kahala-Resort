@@ -1,0 +1,65 @@
+:host {
+    min-height: 0;
+    background: transparent;
+    color: #272838;
+    font-family: 'DM Sans', sans-serif;
+}
+
+h1,
+h2 {
+    font-family: 'DM Sans', sans-serif;
+}
+
+h1 {
+    margin: 0 0 24px;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 600;
+    letter-spacing: -.7px;
+}
+
+h2 {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.panel {
+    padding: 22px;
+    border: 1px solid #e8e8ef;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px #30295505;
+}
+
+.status {
+    padding: 6px 10px;
+    border-radius: 5px;
+    background: #eee9fb;
+    color: #563bc0;
+    font-size: 10px;
+}
+
+button,
+.action {
+    border: 1px solid #6245c6;
+    border-radius: 6px;
+    background: #6245c6;
+    color: white;
+    font-size: 11px;
+}
+
+a:not(.action) {
+    color: #563bc0;
+}
+
+dt {
+    color: #737183;
+    font-size: 11px;
+}
+
+dd {
+    font-size: 12px;
+}
+
+:where(a, button, input, textarea):focus-visible {
+    outline: 3px solid #7557dc;
+    outline-offset: 3px;
+}

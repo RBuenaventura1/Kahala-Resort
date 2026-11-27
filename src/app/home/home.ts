@@ -1,10 +1,4 @@
-import {
-    ChangeDetectorRef,
-    Component,
-    DestroyRef,
-    OnInit,
-    inject
-} from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject, effect, signal } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -52,6 +46,29 @@ export class Home implements OnInit {
     authPassword = '';
 
     readonly formatPrice = money;
+
+    readonly isAdmin = signal(false);
+
+    constructor() {
+        effect((onCleanup) => {
+            const userId = this.supabase.user()?.id;
+
+            let active = true;
+            onCleanup(() => { active = false; });
+
+            this.isAdmin.set(false);
+
+            if (!userId) return;
+
+            void this.supabase.checkAdminAccess()
+                .then(allowed => {
+                    if (active) this.isAdmin.set(allowed);
+                })
+                .catch(error => {
+                    console.error('Admin access check failed:', error);
+                });
+        });
+    }
 
     get signedIn(): boolean {
         return !!this.supabase.user();
@@ -172,10 +189,18 @@ export class Home implements OnInit {
             // Accept only the booking routes created by this application.
             if (
                 returnTo &&
-                /^\/(?:reserve\/[a-f0-9-]+|my-reservations(?:\/[a-f0-9-]+)?)(?:\?page=\d+)?$/i
+                /^\/(?:dashboard|admin|reserve\/[a-f0-9-]+|my-reservations(?:\/[a-f0-9-]+)?)(?:\?page=\d+)?$/i
                     .test(returnTo)
             ) {
                 await this.router.navigateByUrl(returnTo);
+            } else {
+                const admin = await this.supabase
+                    .checkAdminAccess()
+                    .catch(() => false);
+
+                await this.router.navigateByUrl(
+                    admin ? '/admin' : '/dashboard'
+                );
             }
         } catch (error: unknown) {
             console.error('Authentication failed:', error);

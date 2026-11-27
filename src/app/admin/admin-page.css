@@ -1,0 +1,62 @@
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 18px 20px;
+    border: 1px solid #e8e8ef;
+    border-radius: 9px;
+    background: #fafafd;
+}
+
+.toolbar label {
+    margin-top: 0;
+    color: #666477;
+    font-size: 11px;
+}
+
+select {
+    min-width: 190px;
+    padding: 10px 12px;
+    border: 1px solid #dcd9e8;
+    border-radius: 6px;
+    background: white;
+    color: #353347;
+    font: inherit;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 18px;
+}
+
+summary {
+    color: #563bc0;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.confirmation {
+    margin-top: 18px;
+    padding: 16px;
+    border: 1px solid #d9cff3;
+    border-radius: 7px;
+    background: #f6f2ff;
+}
+
+.confirmation p {
+    margin-top: 0;
+    font-size: 12px;
+}
+
+select:focus-visible,
+summary:focus-visible {
+    outline: 3px solid #7557dc;
+    outline-offset: 3px;
+}

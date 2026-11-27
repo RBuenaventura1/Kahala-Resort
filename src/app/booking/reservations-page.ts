@@ -3,30 +3,25 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SupabaseService } from '../services/supabase.service';
 import {
-    money,
-    nightsBetween,
-    Reservation,
-    stayDate
+  money,
+  nightsBetween,
+  Reservation,
+  stayDate
 } from './booking.models';
 
 @Component({
-    selector: 'app-reservations-page',
-    imports: [RouterLink],
-    styleUrl: './booking.css',
-    template: `
-    <nav class="page-nav" aria-label="Main navigation">
-        <a class="brand" routerLink="/" aria-label="Kahala Resort home">
-        <span class="brand-mark" aria-hidden="true">K</span>
-        <span class="brand-text">
-            KAHALA
-            <small>RESORT &amp; RETREAT</small>
-        </span>
-        </a>
-        <a routerLink="/" fragment="accommodations">Explore rooms</a>
-    </nav>
+  selector: 'app-reservations-page',
+  imports: [RouterLink],
+  styleUrls: [
+    './booking.css',
+    '../dashboard/dashboard-content.css',
+    '../dashboard/kahala-theme.css'
+  ],
+  template: `
+  
+<section aria-label="Your reservations">
 
-    <main>
-      <h1>{{ reservationId() ? 'Reservation details' : 'My reservations' }}</h1>
+-      <h1>{{ reservationId() ? 'Reservation details' : 'My reservations' }}</h1>
 
       @if (!supabase.authReady()) {
         <p role="status">Checking your session…</p>
@@ -177,125 +172,125 @@ import {
           </nav>
         }
       }
-    </main>
+    </section>
   `
 })
 export class ReservationsPage {
-    readonly supabase = inject(SupabaseService);
-    readonly router = inject(Router);
-    private readonly route = inject(ActivatedRoute);
+  readonly supabase = inject(SupabaseService);
+  readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-    private readonly params = toSignal(this.route.paramMap, {
-        initialValue: this.route.snapshot.paramMap
+  private readonly params = toSignal(this.route.paramMap, {
+    initialValue: this.route.snapshot.paramMap
+  });
+
+  private readonly query = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap
+  });
+
+  private readonly reload = signal(0);
+
+  readonly reservationId = computed(() =>
+    this.params().get('reservationId')
+  );
+
+  readonly page = computed(() => {
+    const value = Number(this.query().get('page') ?? 1);
+    return Number.isSafeInteger(value) && value > 0 ? value : 1;
+  });
+
+  readonly pageSize = 6;
+  readonly reservations = signal<Reservation[]>([]);
+  readonly detail = signal<Reservation | null>(null);
+  readonly total = signal(0);
+  readonly loading = signal(false);
+  readonly error = signal('');
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.total() / this.pageSize))
+  );
+
+  readonly money = money;
+  readonly stayDate = stayDate;
+  readonly nightsBetween = nightsBetween;
+
+  readonly status = (value: string): string =>
+    value.replace(/_/g, ' ');
+
+  constructor() {
+    effect((onCleanup) => {
+      const userId = this.supabase.user()?.id;
+      const id = this.reservationId();
+      const page = this.page();
+      this.reload();
+
+      let active = true;
+      onCleanup(() => { active = false; });
+
+      this.reservations.set([]);
+      this.detail.set(null);
+      this.error.set('');
+      this.total.set(0);
+      this.loading.set(!!userId);
+
+      if (!userId) return;
+
+      const load = async (): Promise<void> => {
+        try {
+          if (id) {
+            const result = await this.supabase.getMyReservation(userId, id);
+
+            if (!active) return;
+            if (result.error) throw result.error;
+
+            this.detail.set(result.data);
+          } else {
+            const result = await this.supabase.getMyReservations(
+              userId,
+              page,
+              this.pageSize
+            );
+
+            if (!active) return;
+            if (result.error) throw result.error;
+
+            const count = result.count ?? 0;
+            const lastPage = Math.max(1, Math.ceil(count / this.pageSize));
+            this.total.set(count);
+
+            if (page > lastPage) {
+              await this.router.navigate(['/my-reservations'], {
+                queryParams: { page: lastPage },
+                replaceUrl: true
+              });
+              return;
+            }
+
+            this.reservations.set(result.data ?? []);
+          }
+        } catch (error: unknown) {
+          if (!active) return;
+
+          console.error('Reservation loading failed:', error);
+          this.error.set('Unable to load reservations. Please try again.');
+        } finally {
+          if (active) this.loading.set(false);
+        }
+      };
+
+      void load();
     });
+  }
 
-    private readonly query = toSignal(this.route.queryParamMap, {
-        initialValue: this.route.snapshot.queryParamMap
+  goToPage(page: number): void {
+    if (this.loading() || page < 1 || page > this.totalPages()) return;
+
+    void this.router.navigate(['/my-reservations'], {
+      queryParams: { page }
     });
+  }
 
-    private readonly reload = signal(0);
-
-    readonly reservationId = computed(() =>
-        this.params().get('reservationId')
-    );
-
-    readonly page = computed(() => {
-        const value = Number(this.query().get('page') ?? 1);
-        return Number.isSafeInteger(value) && value > 0 ? value : 1;
-    });
-
-    readonly pageSize = 6;
-    readonly reservations = signal<Reservation[]>([]);
-    readonly detail = signal<Reservation | null>(null);
-    readonly total = signal(0);
-    readonly loading = signal(false);
-    readonly error = signal('');
-
-    readonly totalPages = computed(() =>
-        Math.max(1, Math.ceil(this.total() / this.pageSize))
-    );
-
-    readonly money = money;
-    readonly stayDate = stayDate;
-    readonly nightsBetween = nightsBetween;
-
-    readonly status = (value: string): string =>
-        value.replace(/_/g, ' ');
-
-    constructor() {
-        effect((onCleanup) => {
-            const userId = this.supabase.user()?.id;
-            const id = this.reservationId();
-            const page = this.page();
-            this.reload();
-
-            let active = true;
-            onCleanup(() => { active = false; });
-
-            this.reservations.set([]);
-            this.detail.set(null);
-            this.error.set('');
-            this.total.set(0);
-            this.loading.set(!!userId);
-
-            if (!userId) return;
-
-            const load = async (): Promise<void> => {
-                try {
-                    if (id) {
-                        const result = await this.supabase.getMyReservation(userId, id);
-
-                        if (!active) return;
-                        if (result.error) throw result.error;
-
-                        this.detail.set(result.data);
-                    } else {
-                        const result = await this.supabase.getMyReservations(
-                            userId,
-                            page,
-                            this.pageSize
-                        );
-
-                        if (!active) return;
-                        if (result.error) throw result.error;
-
-                        const count = result.count ?? 0;
-                        const lastPage = Math.max(1, Math.ceil(count / this.pageSize));
-                        this.total.set(count);
-
-                        if (page > lastPage) {
-                            await this.router.navigate(['/my-reservations'], {
-                                queryParams: { page: lastPage },
-                                replaceUrl: true
-                            });
-                            return;
-                        }
-
-                        this.reservations.set(result.data ?? []);
-                    }
-                } catch (error: unknown) {
-                    if (!active) return;
-
-                    console.error('Reservation loading failed:', error);
-                    this.error.set('Unable to load reservations. Please try again.');
-                } finally {
-                    if (active) this.loading.set(false);
-                }
-            };
-
-            void load();
-        });
-    }
-
-    goToPage(page: number): void {
-        if (this.loading() || page < 1 || page > this.totalPages()) return;
-
-        void this.router.navigate(['/my-reservations'], {
-            queryParams: { page }
-        });
-    }
-
-    refresh(): void {
-        this.reload.update(value => value + 1);
-    }
+  refresh(): void {
+    this.reload.update(value => value + 1);
+  }
 }

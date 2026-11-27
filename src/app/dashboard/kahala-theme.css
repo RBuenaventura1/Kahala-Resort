@@ -1,0 +1,344 @@
+:host {
+    --kahala-gold: #d4af37;
+    --kahala-gold-light: #f1d98c;
+    --kahala-navy: #10252a;
+    --kahala-cream: #f6f3eb;
+    --kahala-ink: #233432;
+    --kahala-muted: #64736a;
+    --kahala-border: #e3dfd2;
+
+    color: var(--kahala-ink);
+    background: var(--kahala-cream);
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Dashboard frame */
+
+.workspace {
+    background: var(--kahala-cream);
+    border-color: var(--kahala-border);
+    border-radius: 0;
+}
+
+.sidebar {
+    background: var(--kahala-navy);
+    border-color: var(--kahala-navy);
+    border-radius: 0;
+}
+
+.sidebar .brand {
+    color: white;
+}
+
+.brand-mark {
+    width: 39px;
+    height: 39px;
+    color: var(--kahala-gold);
+    border-color: var(--kahala-gold);
+    border-radius: 0;
+}
+
+.sidebar .nav-label {
+    color: #bcc9c1;
+}
+
+.sidebar nav a {
+    color: #e1e8e2;
+    border-radius: 0;
+}
+
+.sidebar nav a:hover {
+    background: #ffffff0d;
+    color: var(--kahala-gold-light);
+}
+
+.sidebar nav a.active {
+    background: var(--kahala-gold);
+    color: var(--kahala-navy);
+    box-shadow: none;
+    font-weight: 600;
+}
+
+.sidebar-note {
+    border-color: #ffffff26;
+    color: #bcc9c1;
+}
+
+.sidebar-note a {
+    color: var(--kahala-gold-light);
+}
+
+.topbar {
+    background: white;
+    border-color: var(--kahala-border);
+}
+
+.workspace-name {
+    color: var(--kahala-ink);
+    letter-spacing: .7px;
+}
+
+.account-email {
+    color: var(--kahala-muted);
+}
+
+/* Homepage typography */
+
+h1,
+h2,
+h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
+}
+
+h1 {
+    font-size: clamp(32px, 3vw, 44px);
+    letter-spacing: -1px;
+}
+
+h2 {
+    font-size: 23px;
+}
+
+h3 {
+    font-size: 20px;
+}
+
+.eyebrow {
+    color: #786127;
+    letter-spacing: 2px;
+}
+
+.subtitle,
+.room-type,
+.stay-dates,
+.stay-meta,
+.results-count,
+.history-intro,
+.history-empty,
+.state-message,
+dt {
+    color: var(--kahala-muted);
+}
+
+/* Gold actions */
+
+button,
+.action,
+.primary-button,
+.sign-in {
+    background: var(--kahala-gold);
+    color: var(--kahala-navy);
+    border: 1px solid var(--kahala-gold);
+    border-radius: 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .8px;
+}
+
+button:hover,
+.action:hover,
+.primary-button:hover,
+.sign-in:hover {
+    background: var(--kahala-gold-light);
+    border-color: var(--kahala-gold-light);
+}
+
+.filter-bar {
+    border-color: var(--kahala-border);
+}
+
+.filter-bar button {
+    background: transparent;
+    color: var(--kahala-muted);
+    border: 0;
+    border-bottom: 2px solid transparent;
+}
+
+.filter-bar button.active {
+    background: transparent;
+    color: var(--kahala-ink);
+    border-bottom-color: var(--kahala-gold);
+}
+
+.text-button,
+.text-button:hover {
+    border: 0;
+    background: transparent;
+    color: #786127;
+}
+
+.pagination button {
+    background: white;
+    border-color: var(--kahala-border);
+    color: var(--kahala-ink);
+}
+
+.pagination button:hover {
+    background: var(--kahala-cream);
+}
+
+/* Accommodation cards */
+
+.stay-card,
+.history,
+.panel {
+    background: white;
+    border-color: var(--kahala-border);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.stay-card:hover {
+    transform: none;
+    box-shadow: 0 8px 24px #10252a0d;
+}
+
+.card-photo {
+    margin: 0;
+    border-radius: 0;
+}
+
+.card-content {
+    padding: 18px;
+}
+
+.card-footer {
+    background: var(--kahala-navy);
+    color: white;
+}
+
+.card-footer strong {
+    color: var(--kahala-gold-light);
+}
+
+.badge,
+.status {
+    background: #f3ead3;
+    color: #70571a;
+    border-radius: 0;
+    letter-spacing: .5px;
+}
+
+.badge.pending {
+    background: #f3ead3;
+    color: #70571a;
+}
+
+.badge.confirmed,
+.badge.checked_in {
+    background: #e4ede5;
+    color: #2e583e;
+}
+
+.badge.checked_out {
+    background: #f0eee6;
+    color: #546257;
+}
+
+.badge.cancelled {
+    background: #f4e4e1;
+    color: #8a3a30;
+}
+
+.photo-placeholder,
+.history-placeholder {
+    background: var(--kahala-cream);
+    color: #786127;
+    border-radius: 0;
+}
+
+.history-item {
+    border-color: var(--kahala-border);
+    border-radius: 0;
+}
+
+.history-item:hover {
+    background: var(--kahala-cream);
+}
+
+.history-item img {
+    border-radius: 0;
+}
+
+.history-item small {
+    color: var(--kahala-muted);
+}
+
+.history-link {
+    color: #786127;
+}
+
+.empty-state {
+    background: white;
+    border-color: var(--kahala-border);
+    border-radius: 0;
+}
+
+.empty-state p {
+    color: var(--kahala-muted);
+}
+
+/* Admin controls */
+
+.toolbar {
+    background: #f0eee5;
+    border-color: var(--kahala-border);
+    border-radius: 0;
+}
+
+.toolbar label {
+    color: var(--kahala-muted);
+}
+
+select,
+input,
+textarea {
+    border-color: #a0aa9d;
+    border-radius: 0;
+    color: var(--kahala-ink);
+    background: white;
+}
+
+summary {
+    color: #786127;
+}
+
+.confirmation {
+    background: #faf4e4;
+    border-color: #c9b16a;
+    border-radius: 0;
+}
+
+a:not([class]),
+.panel a:not(.action) {
+    color: #786127;
+}
+
+.sidebar nav a:not(.active) {
+    color: #e1e8e2;
+}
+
+.sidebar nav a.active {
+    color: var(--kahala-navy);
+}
+
+.sidebar nav a:not(.active):hover,
+.sidebar-note a {
+    color: var(--kahala-gold-light);
+}
+
+.error {
+    color: #922c24;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+    outline: 3px solid #a58225;
+    outline-offset: 3px;
+}

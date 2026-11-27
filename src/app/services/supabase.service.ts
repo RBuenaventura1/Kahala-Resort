@@ -3,6 +3,7 @@ import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { Reservation, Room } from '../booking/booking.models';
+import { AdminReservationPage, ReservationStatus } from '../admin/admin.models';
 
 @Injectable({
   providedIn: 'root'
@@ -123,11 +124,12 @@ export class SupabaseService {
   async getMyReservations(
     userId: string,
     page = 1,
-    pageSize = 6
+    pageSize = 6,
+    status: Reservation['status'] | 'all' = 'all'
   ) {
     const from = (page - 1) * pageSize;
 
-    return this.client
+    let query = this.client
       .from('orders')
       .select(
         `id, room_id, check_in, check_out, guests,
@@ -138,7 +140,13 @@ export class SupabaseService {
        )`,
         { count: 'exact' }
       )
-      .eq('user_id', userId)
+      .eq('user_id', userId);
+
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    return query
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .range(from, from + pageSize - 1)
@@ -162,4 +170,49 @@ export class SupabaseService {
     });
   }
 
+  async checkAdminAccess(): Promise<boolean> {
+    const { data, error } = await this.client.rpc('is_admin');
+
+    if (error) throw error;
+
+    return data === true;
+  }
+
+  async getAdminReservations(
+    page = 1,
+    pageSize = 10,
+    status = 'all'
+  ) {
+    return this.client
+      .rpc('admin_get_reservations', {
+        p_page: page,
+        p_page_size: pageSize,
+        p_status: status === 'all' ? null : status
+      })
+      .single()
+      .overrideTypes<AdminReservationPage, { merge: false }>();
+  }
+
+  async updateAdminReservationStatus(
+    reservationId: string,
+    expectedStatus: ReservationStatus,
+    newStatus: ReservationStatus
+  ) {
+    return this.client.rpc('admin_update_reservation_status', {
+      p_reservation_id: reservationId,
+      p_expected_status: expectedStatus,
+      p_new_status: newStatus
+    });
+  }
+
+  async getMyReservationCount(
+    userId: string,
+    status: Reservation['status']
+  ) {
+    return this.client
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', status);
+  }
 }

@@ -12,7 +12,8 @@
         <a href="#experiences" (click)="scrollTo('experiences')">Experiences</a>
         <a href="#accommodations" (click)="scrollTo('accommodations')">Accommodations</a>
         <a href="#story" (click)="scrollTo('story')">Our Story</a>
-        <a *ngIf="signedIn" routerLink="/my-reservations"> My reservations</a>
+        <a *ngIf="signedIn" routerLink="/dashboard">Dashboard</a>
+        <a *ngIf="isAdmin()" routerLink="/admin">Admin dashboard</a>
         <button class="nav-book" (click)="scrollTo('accommodations')">Reserve Your Stay</button>
 
         <button *ngIf="!signedIn" class="nav-login" (click)="openAuth('login')">Sign in</button>

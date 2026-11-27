@@ -1,0 +1,153 @@
+<div class="filter-bar" role="group" aria-label="Filter your stays">
+    @for (tab of tabs; track tab.value) {
+    <button type="button" [class.active]="filter() === tab.value" [attr.aria-pressed]="filter() === tab.value"
+        (click)="selectFilter(tab.value)">
+        {{ tab.label }}
+    </button>
+    }
+</div>
+
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">YOUR KAHALA COLLECTION</p>
+        <h1>A stay to look forward to.</h1>
+        <p class="subtitle">
+            Your requests, confirmed escapes, and memories in one place.
+        </p>
+    </div>
+
+    <a class="primary-button" routerLink="/" fragment="accommodations">
+        ＋ Plan a stay
+    </a>
+</div>
+
+<div class="trip-layout">
+    <section class="stays-section" aria-labelledby="stays-heading">
+        <div class="section-heading">
+            <h2 id="stays-heading">Your reservations</h2>
+
+            <button class="text-button" type="button" [disabled]="loading()" (click)="refresh()">
+                Refresh
+            </button>
+        </div>
+
+        @if (loading()) {
+        <p class="state-message" role="status">
+            Loading your stays…
+        </p>
+        } @else if (error()) {
+        <p class="state-message error" role="alert">
+            {{ error() }}
+        </p>
+        } @else {
+        <p class="results-count" role="status">
+            {{ total() }} matching reservations · Newest first
+        </p>
+
+        <div class="stay-grid">
+            @for (booking of stays(); track booking.id) {
+            <article class="stay-card">
+                <a class="card-link" [routerLink]="['/my-reservations', booking.id]">
+                    <div class="card-photo">
+                        @if (booking.room?.image_url; as image) {
+                        <img [src]="image" [alt]="booking.room?.name || 'Kahala accommodation'" loading="lazy" />
+                        } @else {
+                        <div class="photo-placeholder">KAHALA</div>
+                        }
+
+                        <span [class]="'badge ' + booking.status">
+                            {{ label(booking.status) }}
+                        </span>
+                    </div>
+
+                    <div class="card-content">
+                        <p class="room-type">
+                            {{ booking.room?.room_type || 'Accommodation' }}
+                        </p>
+
+                        <h3>
+                            {{ booking.room?.name || 'Reserved accommodation' }}
+                        </h3>
+
+                        <p class="stay-dates">
+                            {{ date(booking.check_in) }}
+                            — {{ date(booking.check_out) }}
+                        </p>
+
+                        <p class="stay-meta">
+                            {{ nights(booking.check_in, booking.check_out) }} nights
+                            · {{ booking.guests }} guests
+                        </p>
+                    </div>
+
+                    <footer class="card-footer">
+                        <span>Booking total</span>
+                        <strong>{{ money(booking.total_price) }}</strong>
+                    </footer>
+                </a>
+            </article>
+            } @empty {
+            <div class="empty-state">
+                <h3>No stays here yet.</h3>
+                <p>
+                    Choose another filter or explore our accommodations
+                    to plan a stay.
+                </p>
+            </div>
+            }
+        </div>
+
+        @if (pages() > 1) {
+        <nav class="pagination" aria-label="Stay pages">
+            <button type="button" [disabled]="page() === 1" (click)="goToPage(page() - 1)">
+                Previous
+            </button>
+
+            <span>Page {{ page() }} of {{ pages() }}</span>
+
+            <button type="button" [disabled]="page() >= pages()" (click)="goToPage(page() + 1)">
+                Next
+            </button>
+        </nav>
+        }
+        }
+    </section>
+
+    <aside class="history" aria-labelledby="history-heading">
+        <h2 id="history-heading">Completed stays</h2>
+        <p class="history-intro">
+            A little look back at your escapes.
+        </p>
+
+        @if (historyLoading()) {
+        <p role="status">Loading history…</p>
+        } @else if (historyError()) {
+        <p class="error" role="alert">{{ historyError() }}</p>
+        } @else {
+        @for (booking of completed(); track booking.id) {
+        <a class="history-item" [routerLink]="['/my-reservations', booking.id]">
+            @if (booking.room?.image_url; as image) {
+            <img [src]="image" alt="" loading="lazy" />
+            } @else {
+            <span class="history-placeholder" aria-hidden="true">
+                K
+            </span>
+            }
+
+            <span>
+                <strong>{{ booking.room?.name || 'Kahala stay' }}</strong>
+                <small>{{ date(booking.check_out) }}</small>
+            </span>
+        </a>
+        } @empty {
+        <p class="history-empty">
+            Your completed stays will appear here after check-out.
+        </p>
+        }
+        }
+
+        <a class="history-link" routerLink="/my-reservations">
+            Open booking history →
+        </a>
+    </aside>
+</div>
